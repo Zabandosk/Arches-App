@@ -1,40 +1,13 @@
-{% extends "views/report-templates/default.htm" %}
-{% load i18n %}
-
 {% block body %}
-    <!--ko if: hasProvisionalData() && (editorContext === false) -->
-    <div class="report-provisional-flag">{% trans 'This resource has provisional edits (not displayed in this report) that are pending review' %}</div>
-    <!--/ko-->
-    <!--ko if: hasProvisionalData() && (editorContext === true && report.userisreviewer === true) -->
-    <div class="report-provisional-flag">{% trans 'This resource has provisional edits (not displayed in this report) that are pending review' %}</div>
-    <!--/ko-->
-    <!--ko if: hasProvisionalData() && (editorContext === true && report.userisreviewer === false) -->
-    <div class="report-provisional-flag">{% trans 'This resource has provisional edits that are pending review' %}</div>
-    <!--/ko-->
+<h2>Simple Report Test</h2>
+<p>Report Name: <span data-bind="text: report.get('name')"></span></p>
+<p>Report Date: <span data-bind="text: reportDate"></span></p>
 
-    <div class="rp-report-section relative rp-report-section-root">
-        <div class="rp-report-section-title">
-            <!-- ko foreach: { data: report.cards, as: 'card' } -->
-                <!-- ko if: !!(ko.unwrap(card.tiles).length > 0) -->
-                <!-- ko if: $index() !== 0 --><hr class="rp-tile-separator"><!-- /ko -->
-                <div class="rp-card-section">
-                    <!-- ko component: {
-                        name: card.model.cardComponentLookup[card.model.component_id()].componentname,
-                        params: {
-                            state: 'report',
-                            preview: $parent.report.preview,
-                            card: card,
-                            pageVm: $root,
-                            hideEmptyNodes: $parent.hideEmptyNodes
-                            <p>bi de bunu deneyelim</p>
-                        }
-                    } --> <!-- /ko -->
-                       <div>
-                        <p>bi de bunu deneyelim</p>
-                       </div>
-                </div>
-                <!-- /ko -->
-            <!-- /ko -->
-        </div>
+<!-- Tiles foreach -->
+<!-- ko foreach: report.attributes.tiles -->
+    <div class="rp-tile">
+        <p>Tile ID: <span data-bind="text: tileid"></span></p>
+        <pre data-bind="text: JSON.stringify(data, null, 2)"></pre>
     </div>
-    {% endblock body %}
+<!-- /ko -->
+{% endblock body %}
