@@ -1,7 +1,8 @@
 define([
     'knockout',
+    'viewmodels/report',
     'templates/views/report-templates/orhuns_report.htm'
-], function(ko, customReportTemplate) {
+], function(ko, ReportViewModel, customReportTemplate) {
 
     return ko.components.register('orhuns_report', {
         viewModel: function(params) {
@@ -9,96 +10,95 @@ define([
 
             self.report = params.report;
 
+            // --- Metadata ---
+            self.reportDate = self.report.report_json ? self.report.report_json.report_date : 'No date';
+            self.firstCardName = self.report.cards && self.report.cards.length > 0 ? self.report.cards[0].name : 'No cards';
+            self.hasProvisionalData = function() { return false; };
+            self.summary = null;
+            self.configForm = null;
+
             console.log('==== ORHUNS REPORT ====');
             console.log('report object:', self.report);
 
-            /* ---------------------------
-             * NODE LOOKUP (graph)
-             * --------------------------- */
+            // --- Node lookup ---
             var nodeLookup = {};
-            (self.report.attributes.graph.nodes || []).forEach(function(node) {
+            (self.report.attributes.graph?.nodes || []).forEach(function(node) {
                 nodeLookup[node.nodeid] = node;
             });
-
             console.log('Node lookup:', nodeLookup);
 
-            /* ---------------------------
-             * NODEGROUP -> TILES MAP
-             * --------------------------- */
-            var groups = {};
+            // --- Tiles normalize ---
+            self.tiles = ko.observableArray(
+                (self.report.attributes.tiles || []).map(function(tile) {
 
-            (self.report.attributes.tiles || []).forEach(function(tile) {
-                if (!groups[tile.nodegroup_id]) {
-                    groups[tile.nodegroup_id] = {
-                        nodegroup_id: tile.nodegroup_id,
-                        tiles: []
-                    };
-                }
+                    var nodes = [];
 
-                var nodes = [];
+                    Object.keys(tile.data || {}).forEach(function(nodeid, i) {
+                        var nodeDef = nodeLookup[nodeid];
+                        var raw = tile.data[nodeid];
 
-                Object.keys(tile.data || {}).forEach(function(nodeid, i) {
-                    var nodeDef = nodeLookup[nodeid];
-                    var raw = tile.data[nodeid];
+                        var value = null;
+                        var label = '—';
 
-                    var label = '—';
-                    var value = null;
+                        if (!nodeDef) {
+                            label = '[Unknown node]';
+                        } else {
+                            switch (nodeDef.datatype) {
 
-                    if (nodeDef) {
-                        switch (nodeDef.datatype) {
+                                case 'string':
+                                    value =
+                                        (raw.en && raw.en.value) ||
+                                        (raw.ar && raw.ar.value) ||
+                                        (raw.he && raw.he.value) ||
+                                        '';
+                                    label = value || '—';
+                                    break;
 
-                            case 'string':
-                                value =
-                                    (raw.en && raw.en.value) ||
-                                    (raw.ar && raw.ar.value) ||
-                                    (raw.he && raw.he.value) ||
-                                    '';
-                                label = value || '—';
-                                break;
+                                case 'number':
+                                    value = raw;  // number primitive
+                                    label = (value !== null && value !== undefined) ? value : '—';
+                                    break;
 
-                            case 'number':
-                                value = raw.value;
-                                label = value !== null && value !== undefined ? value : '—';
-                                break;
+                                case 'resource-instance':
+                                    if (Array.isArray(raw) && raw.length > 0) {
+                                        value = raw[0].resourceId;
+                                        label = raw[0].label || value || '—';
+                                    } else {
+                                        value = null;
+                                        label = '—';
+                                    }
+                                    break;
 
-                            case 'resource-instance':
-                                value = raw.resourceId;
-                                label = raw.label || raw.resourceId || '—';
-                                break;
-
-                            default:
-                                label = JSON.stringify(raw);
+                                default:
+                                    value = raw;
+                                    label = JSON.stringify(raw);
+                            }
                         }
-                    } else {
-                        label = '[Unknown node]';
-                    }
 
-                    nodes.push({
-                        order: i + 1,
-                        nodeid: nodeid,
-                        alias: nodeDef ? nodeDef.alias : nodeid,
-                        nodename: nodeDef ? nodeDef.name : '',
-                        datatype: nodeDef ? nodeDef.datatype : '',
-                        label: label
+                        nodes.push({
+                            order: i + 1,
+                            nodeid: nodeid,
+                            alias: nodeDef ? nodeDef.alias : nodeid,
+                            nodename: nodeDef ? nodeDef.name : '',
+                            datatype: nodeDef ? nodeDef.datatype : '',
+                            value: value,
+                            label: label
+                        });
                     });
-                });
 
-                groups[tile.nodegroup_id].tiles.push({
-                    tileid: tile.tileid,
-                    nodes: nodes
-                });
-            });
-
-            /* ---------------------------
-             * KO observable
-             * --------------------------- */
-            self.nodegroups = ko.observableArray(
-                Object.values(groups)
+                    return {
+                        tileid: tile.tileid,
+                        nodegroup_id: tile.nodegroup_id,
+                        parenttile_id: tile.parenttile_id,
+                        resourceinstance_id: tile.resourceinstance_id,
+                        nodes: nodes
+                    };
+                })
             );
 
-            console.log('Grouped nodegroups:', self.nodegroups());
-        },
+            console.log('Tiles (processed):', self.tiles());
 
+        },
         template: customReportTemplate
     });
 });

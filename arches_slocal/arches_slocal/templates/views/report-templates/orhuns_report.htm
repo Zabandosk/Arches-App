@@ -1,35 +1,22 @@
 {% block body %}
-<h2>Grouped by Nodegroup (Cards)</h2>
+<h2>Simple Report Test</h2>
+<p>Report Name: <span data-bind="text: report.get('name')"></span></p>
+<p>Report Date: <span data-bind="text: reportDate"></span></p>
 
-<!-- KO context fix -->
-<!-- ko with: $component -->
+<!-- Tiles foreach -->
+<!-- ko foreach: tiles -->
+    <div class="rp-tile">
+        <p>Tile ID: <span data-bind="text: tileid"></span></p>
+        <p>Nodegroup ID: <span data-bind="text: nodegroup_id"></span></p>
+        <p>Resource Instance ID: <span data-bind="text: resourceinstance_id"></span></p>
 
-    <!-- ko foreach: nodegroups -->
-        <div class="rp-nodegroup">
-            <h3>
-                Nodegroup:
-                <span data-bind="text: nodegroup_id"></span>
-            </h3>
-
-            <!-- ko foreach: tiles -->
-                <div class="rp-tile">
-                    <p>
-                        <strong>Tile:</strong>
-                        <span data-bind="text: tileid"></span>
-                    </p>
-
-                    <ul data-bind="foreach: nodes">
-                        <li>
-                            <strong data-bind="text: nodename"></strong>
-                            (<span data-bind="text: datatype"></span>)
-                            :
-                            <span data-bind="text: label"></span>
-                        </li>
-                    </ul>
-                </div>
-            <!-- /ko -->
-        </div>
-    <!-- /ko -->
-
+        <!-- Nodes foreach -->
+        <!-- ko foreach: nodes -->
+            <div class="rp-tile-node">
+                <strong data-bind="text: nodename + ' (' + datatype + ')'"></strong>:
+                <span data-bind="text: label"></span>
+            </div>
+        <!-- /ko -->
+    </div>
 <!-- /ko -->
 {% endblock body %}
