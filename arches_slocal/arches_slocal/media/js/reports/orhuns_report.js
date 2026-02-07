@@ -1,33 +1,68 @@
 define([
     'knockout',
-    'viewmodels/report',
     'templates/views/report-templates/orhuns_report.htm'
-], function(ko, ReportViewModel, customReportTemplate) {
+], function (ko, customReportTemplate) {
 
     return ko.components.register('orhuns_report', {
-        viewModel: function(params) {
+        viewModel: function (params) {
             var self = this;
-
 
             self.report = params.report;
 
-
-            self.reportDate = self.report.report_json ? self.report.report_json.report_date : 'No date';
-            self.firstCardName = self.report.cards && self.report.cards.length > 0 ? self.report.cards[0].name : 'No cards';
-            self.hasProvisionalData = function() { return false; };
-            self.summary = null;
-            self.configForm = null;
+            self.reportDate = self.report.report_json
+                ? self.report.report_json.report_date
+                : 'No date';
 
             console.log('==== ORHUNS REPORT ====');
-            console.log('report object:', self.report);
+            console.log('Report:', self.report);
 
-            // Tiles log (value varsa)
-            if (self.report.attributes && self.report.attributes.tiles) {
-                self.report.attributes.tiles.forEach(function(tile, i) {
-                    console.log('Tile', i, 'tileid:', tile.tileid, 'nodegroup_id:', tile.nodegroup_id);
-                    console.log('  data:', tile.data); 
-                });
-            }
+
+            var nodeLookup = {};
+            (self.report.attributes.graph.nodes || []).forEach(function (node) {
+                nodeLookup[node.nodeid] = node;
+            });
+
+
+            self.tiles = ko.observableArray(
+                (self.report.attributes.tiles || []).map(function (tile) {
+
+                    var nodes = [];
+
+                    Object.keys(tile.data || {}).forEach(function (nodeid, i) {
+                        var nodeDef = nodeLookup[nodeid];
+                        var raw = tile.data[nodeid];
+
+                        var label = '—';
+
+                        if (nodeDef && raw) {
+                            if (nodeDef.datatype === 'string') {
+                                label =
+                                    (raw.en && raw.en.value) ||
+                                    Object.values(raw)[0]?.value ||
+                                    '—';
+                            } else if (nodeDef.datatype === 'number') {
+                                label = raw.value ?? '—';
+                            } else if (nodeDef.datatype === 'resource-instance') {
+                                label = raw.label || raw.resourceId || '—';
+                            } else {
+                                label = JSON.stringify(raw);
+                            }
+                        }
+
+                        nodes.push({
+                            alias: nodeDef ? nodeDef.alias : nodeid,
+                            datatype: nodeDef ? nodeDef.datatype : '',
+                            label: label
+                        });
+                    });
+
+                    return {
+                        tileid: tile.tileid,
+                        nodegroup_id: tile.nodegroup_id,
+                        nodes: nodes
+                    };
+                })
+            );
         },
         template: customReportTemplate
     });

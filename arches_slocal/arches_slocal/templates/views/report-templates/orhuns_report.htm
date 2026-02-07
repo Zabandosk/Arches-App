@@ -1,6 +1,7 @@
 {% block body %}
 <h2>Simple Report Test</h2>
 <p>Report Name: <span data-bind="text: report.get('name')"></span></p>
+<p>Report Name: <span data-bind="text: report.get('tiles')"></span></p>
 <p>Report Date: <span data-bind="text: reportDate"></span></p>
 
 <!-- Tiles foreach -->
@@ -9,5 +10,21 @@
         <p>Tile ID: <span data-bind="text: tileid"></span></p>
         <pre data-bind="text: JSON.stringify(data, null, 2)"></pre>
     </div>
+<!-- /ko --><h3>Tiles (Readable)</h3>
+
+<!-- ko foreach: tiles -->
+  <div class="rp-tile">
+    <p><strong>Tile:</strong> <span data-bind="text: tileid"></span></p>
+
+    <ul>
+      <!-- ko foreach: nodes -->
+        <li>
+          <strong data-bind="text: alias"></strong>
+          (<span data-bind="text: datatype"></span>):
+          <span data-bind="text: label"></span>
+        </li>
+      <!-- /ko -->
+    </ul>
+  </div>
 <!-- /ko -->
 {% endblock body %}
