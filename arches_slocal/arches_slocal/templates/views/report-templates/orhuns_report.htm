@@ -1,30 +1,35 @@
 {% block body %}
-<h2>Simple Report Test</h2>
-<p>Report Name: <span data-bind="text: report.get('name')"></span></p>
-<p>Report Name: <span data-bind="text: report.get('tiles')"></span></p>
-<p>Report Date: <span data-bind="text: reportDate"></span></p>
+<h2>Grouped by Nodegroup (Cards)</h2>
 
-<!-- Tiles foreach -->
-<!-- ko foreach: report.attributes.tiles -->
-    <div class="rp-tile">
-        <p>Tile ID: <span data-bind="text: tileid"></span></p>
-        <pre data-bind="text: JSON.stringify(data, null, 2)"></pre>
-    </div>
-<!-- /ko --><h3>Tiles (Readable)</h3>
+<!-- KO context fix -->
+<!-- ko with: $component -->
 
-<!-- ko foreach: tiles -->
-  <div class="rp-tile">
-    <p><strong>Tile:</strong> <span data-bind="text: tileid"></span></p>
+    <!-- ko foreach: nodegroups -->
+        <div class="rp-nodegroup">
+            <h3>
+                Nodegroup:
+                <span data-bind="text: nodegroup_id"></span>
+            </h3>
 
-    <ul>
-      <!-- ko foreach: nodes -->
-        <li>
-          <strong data-bind="text: alias"></strong>
-          (<span data-bind="text: datatype"></span>):
-          <span data-bind="text: label"></span>
-        </li>
-      <!-- /ko -->
-    </ul>
-  </div>
+            <!-- ko foreach: tiles -->
+                <div class="rp-tile">
+                    <p>
+                        <strong>Tile:</strong>
+                        <span data-bind="text: tileid"></span>
+                    </p>
+
+                    <ul data-bind="foreach: nodes">
+                        <li>
+                            <strong data-bind="text: nodename"></strong>
+                            (<span data-bind="text: datatype"></span>)
+                            :
+                            <span data-bind="text: label"></span>
+                        </li>
+                    </ul>
+                </div>
+            <!-- /ko -->
+        </div>
+    <!-- /ko -->
+
 <!-- /ko -->
 {% endblock body %}

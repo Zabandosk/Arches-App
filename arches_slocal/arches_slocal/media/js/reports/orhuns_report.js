@@ -1,69 +1,104 @@
 define([
     'knockout',
     'templates/views/report-templates/orhuns_report.htm'
-], function (ko, customReportTemplate) {
+], function(ko, customReportTemplate) {
 
     return ko.components.register('orhuns_report', {
-        viewModel: function (params) {
+        viewModel: function(params) {
             var self = this;
 
             self.report = params.report;
 
-            self.reportDate = self.report.report_json
-                ? self.report.report_json.report_date
-                : 'No date';
-
             console.log('==== ORHUNS REPORT ====');
-            console.log('Report:', self.report);
+            console.log('report object:', self.report);
 
-
+            /* ---------------------------
+             * NODE LOOKUP (graph)
+             * --------------------------- */
             var nodeLookup = {};
-            (self.report.attributes.graph.nodes || []).forEach(function (node) {
+            (self.report.attributes.graph.nodes || []).forEach(function(node) {
                 nodeLookup[node.nodeid] = node;
             });
 
+            console.log('Node lookup:', nodeLookup);
 
-            self.tiles = ko.observableArray(
-                (self.report.attributes.tiles || []).map(function (tile) {
+            /* ---------------------------
+             * NODEGROUP -> TILES MAP
+             * --------------------------- */
+            var groups = {};
 
-                    var nodes = [];
-
-                    Object.keys(tile.data || {}).forEach(function (nodeid, i) {
-                        var nodeDef = nodeLookup[nodeid];
-                        var raw = tile.data[nodeid];
-
-                        var label = '—';
-
-                        if (nodeDef && raw) {
-                            if (nodeDef.datatype === 'string') {
-                                label =
-                                    (raw.en && raw.en.value) ||
-                                    Object.values(raw)[0]?.value ||
-                                    '—';
-                            } else if (nodeDef.datatype === 'number') {
-                                label = raw.value ?? '—';
-                            } else if (nodeDef.datatype === 'resource-instance') {
-                                label = raw.label || raw.resourceId || '—';
-                            } else {
-                                label = JSON.stringify(raw);
-                            }
-                        }
-
-                        nodes.push({
-                            alias: nodeDef ? nodeDef.alias : nodeid,
-                            datatype: nodeDef ? nodeDef.datatype : '',
-                            label: label
-                        });
-                    });
-
-                    return {
-                        tileid: tile.tileid,
+            (self.report.attributes.tiles || []).forEach(function(tile) {
+                if (!groups[tile.nodegroup_id]) {
+                    groups[tile.nodegroup_id] = {
                         nodegroup_id: tile.nodegroup_id,
-                        nodes: nodes
+                        tiles: []
                     };
-                })
+                }
+
+                var nodes = [];
+
+                Object.keys(tile.data || {}).forEach(function(nodeid, i) {
+                    var nodeDef = nodeLookup[nodeid];
+                    var raw = tile.data[nodeid];
+
+                    var label = '—';
+                    var value = null;
+
+                    if (nodeDef) {
+                        switch (nodeDef.datatype) {
+
+                            case 'string':
+                                value =
+                                    (raw.en && raw.en.value) ||
+                                    (raw.ar && raw.ar.value) ||
+                                    (raw.he && raw.he.value) ||
+                                    '';
+                                label = value || '—';
+                                break;
+
+                            case 'number':
+                                value = raw.value;
+                                label = value !== null && value !== undefined ? value : '—';
+                                break;
+
+                            case 'resource-instance':
+                                value = raw.resourceId;
+                                label = raw.label || raw.resourceId || '—';
+                                break;
+
+                            default:
+                                label = JSON.stringify(raw);
+                        }
+                    } else {
+                        label = '[Unknown node]';
+                    }
+
+                    nodes.push({
+                        order: i + 1,
+                        nodeid: nodeid,
+                        alias: nodeDef ? nodeDef.alias : nodeid,
+                        nodename: nodeDef ? nodeDef.name : '',
+                        datatype: nodeDef ? nodeDef.datatype : '',
+                        label: label
+                    });
+                });
+
+                groups[tile.nodegroup_id].tiles.push({
+                    tileid: tile.tileid,
+                    nodes: nodes
+                });
+            });
+
+            /* ---------------------------
+             * KO observable
+             * --------------------------- */
+            self.nodegroups = ko.observableArray(
+                Object.values(groups)
             );
+
+            console.log('Grouped nodegroups:', self.nodegroups());
         },
+
         template: customReportTemplate
     });
 });
