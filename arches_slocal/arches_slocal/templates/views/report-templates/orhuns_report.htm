@@ -1,22 +1,56 @@
 {% block body %}
-<h2>Simple Report Test</h2>
-<p>Report Name: <span data-bind="text: report.get('name')"></span></p>
-<p>Report Date: <span data-bind="text: reportDate"></span></p>
 
-<!-- Tiles foreach -->
+<h2>People Report</h2>
+<p><strong>Date:</strong> <span data-bind="text: reportDate"></span></p>
+
 <!-- ko foreach: tiles -->
-    <div class="rp-tile">
-        <p>Tile ID: <span data-bind="text: tileid"></span></p>
-        <p>Nodegroup ID: <span data-bind="text: nodegroup_id"></span></p>
-        <p>Resource Instance ID: <span data-bind="text: resourceinstance_id"></span></p>
+<div style="border:1px solid #ccc; padding:10px; margin-bottom:15px;">
 
-        <!-- Nodes foreach -->
-        <!-- ko foreach: nodes -->
-            <div class="rp-tile-node">
-                <strong data-bind="text: nodename + ' (' + datatype + ')'"></strong>:
-                <span data-bind="text: label"></span>
+    <p><strong>Tile:</strong> <span data-bind="text: tileid"></span></p>
+
+    <!-- ko foreach: nodes -->
+    <div style="margin-left:15px; margin-bottom:6px;">
+
+        <strong data-bind="text: nodename"></strong>:
+        <span data-bind="text: label"></span>
+
+        <!-- ko if: datatype === 'resource-instance' -->
+        <div style="margin-left:20px; margin-top:5px;">
+
+            <a href="javascript:void(0);"
+               data-bind="click: function(data, event){
+                   event.preventDefault();
+                   $component.loadRelatedObject(data);
+               }">
+                Show related object
+            </a>
+
+            <!-- ko if: relatedTiles() -->
+            <div style="margin-top:10px; padding:8px; background:#f7f7f7;">
+
+                <!-- ko foreach: relatedTiles() -->
+                <div style="margin-bottom:6px;">
+
+                    <!-- ko foreach: nodes -->
+                    <div style="margin-left:10px;">
+                        <em data-bind="text: nodename"></em>:
+                        <span data-bind="text: label"></span>
+                    </div>
+                    <!-- /ko -->
+
+                </div>
+                <!-- /ko -->
+
             </div>
+            <!-- /ko -->
+
+        </div>
         <!-- /ko -->
+
     </div>
+    <!-- /ko -->
+
+</div>
 <!-- /ko -->
+
 {% endblock body %}
