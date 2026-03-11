@@ -3,10 +3,20 @@
 <h2>People Report</h2>
 <p><strong>Date:</strong> <span data-bind="text: reportDate"></span></p>
 
-<!-- ko foreach: tiles -->
-<div style="border:1px solid #ccc; padding:10px; margin-bottom:15px;">
+<!-- Tab headers -->
+<ul style="list-style:none; padding:0; display:flex; margin-bottom:10px;">
+    <!-- ko foreach: tiles -->
+    <li style="padding:5px 15px; border:1px solid #d33a3a; cursor:pointer; margin-right:2px; background:#ce4f84 !important;"
+        data-bind="css: {background: $parent.activeTab() === $index() ? '#3498db' : '#fff', color: $parent.activeTab() === $index() ? '#fff' : '#000'},
+                   click: function(){ $parent.activeTab($index()) }">
+        <span data-bind="text: tileid"></span>
+    </li>
+    <!-- /ko -->
+</ul>
 
-    <p><strong>Tile:</strong> <span data-bind="text: tileid"></span></p>
+<!-- Tab contents -->
+<!-- ko foreach: tiles -->
+<div data-bind="visible: $parent.activeTab() === $index()" style="border:1px solid #68b140 !important; background:#cbe36b !important; padding:10px; margin-bottom:15px !important;">
 
     <!-- ko foreach: nodes -->
     <div style="margin-left:15px; margin-bottom:6px;">
@@ -26,7 +36,7 @@
             </a>
 
             <!-- ko if: relatedTiles() -->
-            <div style="margin-top:10px; padding:8px; background:#f7f7f7;">
+            <div style="margin-top:10px; padding:8px; background:#77758e !important;">
 
                 <!-- ko foreach: relatedTiles() -->
                 <div style="margin-bottom:6px;">

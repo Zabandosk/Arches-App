@@ -14,6 +14,9 @@ define([
                 ? self.report.report_json.report_date 
                 : 'No date';
 
+                self.activeTab = ko.observable(0);  /* to activate the tabs 
+
+
             /* ---------------- NODE LOOKUP ---------------- */
             var nodeLookup = {};
             (self.report.attributes.graph.nodes || []).forEach(function (n) {
